@@ -17,7 +17,7 @@ imports HCS
       * TotalSupply’ = TotalSupply - value // the new supply is decreased by value
       * Balances[SupplyManager]’ = Balances[SupplyManager] - value
  */
-rule <k> burn(Value, { caller : Caller } ) => . ...</k>
+claim <k> burn(Value, { caller : Caller } ) => .K ...</k>
      <balances> ... (SupplyManager |-> Balance => SupplyManager |-> Balance -Int Value) ...</balances>
      <tokenOwner> Owner </tokenOwner>
      <supplyManager> SupplyManager </supplyManager>

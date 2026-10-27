@@ -1,0 +1,25 @@
+name: Formal models
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
+          build: "true"
+
+  k-framework:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: make -C k-framework docker-verify

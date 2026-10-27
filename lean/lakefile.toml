@@ -1,0 +1,9 @@
+name = "hedera-stablecoin"
+version = "0.1.0"
+defaultTargets = ["HederaStablecoin"]
+
+[leanOptions]
+warningAsError = true
+
+[[lean_lib]]
+name = "HederaStablecoin"

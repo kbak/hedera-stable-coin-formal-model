@@ -16,7 +16,7 @@ imports HCS
       * KycPassed[addr]
       * result = true
  */
-rule <k> setKycPassed(Target:Int, {caller: Caller})
+claim <k> setKycPassed(Target:Int, {caller: Caller})
          ~>
          checkTransferAllowed(Target:Int) => true ...</k>
      <tokenOwner> Owner </tokenOwner>
@@ -41,7 +41,7 @@ rule <k> setKycPassed(Target:Int, {caller: Caller})
       * Frozen[addr]
       * result = true
  */
-rule <k> setKycPassed(Target:Int, {caller: Caller})
+claim <k> setKycPassed(Target:Int, {caller: Caller})
          ~>
          freeze(Target:Int, {caller: Caller})
          ~>
@@ -69,7 +69,7 @@ rule <k> setKycPassed(Target:Int, {caller: Caller})
   Post-conditions
       * result = false
  */
-rule <k> checkTransferAllowed(Target:Int) => false ...</k>
+claim <k> checkTransferAllowed(Target:Int) => false ...</k>
      <tokenOwner> Owner </tokenOwner>
      <kycpassed>... (Target |-> ValK:Bool) ... </kycpassed>
      <frozen> ... (Target |-> ValF:Bool) ... </frozen>

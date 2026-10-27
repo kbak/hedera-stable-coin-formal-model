@@ -18,7 +18,7 @@ imports HCS
       * Balances[From]’ = Balances[From] - value
       * Balances[To]' = Balances[To] + value
  */
-rule <k> transfer(To, Value, { caller : From } ) => . ...</k>
+claim <k> transfer(To, Value, { caller : From } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <balances> ... (From |-> BalanceFrom => From |-> BalanceFrom -Int Value)
                     (To |-> BalanceTo => To |-> BalanceTo +Int Value) ... </balances>
@@ -49,9 +49,9 @@ rule <k> transfer(To, Value, { caller : From } ) => . ...</k>
       * Balances[Acc2]' = Balances[Acc2] + value1 - value2
       * Balances[Acc3]' = Balances[Acc3] + value2
  */
-rule <k> transfer(Acc2, Value1, { caller : Acc1 } )
+claim <k> transfer(Acc2, Value1, { caller : Acc1 } )
          ~>
-         transfer(Acc3, Value2, { caller : Acc2 } ) => . ...</k>
+         transfer(Acc3, Value2, { caller : Acc2 } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <balances> ... (Acc1 |-> BalanceAcc1 => Acc1 |-> BalanceAcc1 -Int Value1)
                     (Acc2 |-> BalanceAcc2 => Acc2 |-> BalanceAcc2 +Int Value1 -Int Value2)
@@ -83,7 +83,7 @@ rule <k> transfer(Acc2, Value1, { caller : Acc1 } )
       * Allowances[from][caller]’ = Allowances[from][caller] - value
       * Balances[to]’ = Balances[to] + value
  */
-rule <k> transferFrom(From:Int, To:Int, Value:Int, {caller: Caller:Int}) => . ... </k>
+claim <k> transferFrom(From:Int, To:Int, Value:Int, {caller: Caller:Int}) => .K ... </k>
        <tokenOwner> TokenOwner </tokenOwner>
        <allowance>
          <allower> From </allower>

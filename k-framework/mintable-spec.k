@@ -19,7 +19,7 @@ imports HCS
 
   Note that according to the spec, the funds go to SupplyManager even if the caller is Owner.
 */
-rule <k> mint(Value, { caller : Caller } ) => . ...</k>
+claim <k> mint(Value, { caller : Caller } ) => .K ...</k>
      <balances> ... (SupplyManager |-> Balance => SupplyManager |-> Balance +Int Value) ...</balances>
      <tokenOwner> Owner </tokenOwner>
      <supplyManager> SupplyManager </supplyManager>

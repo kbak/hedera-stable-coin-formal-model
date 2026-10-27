@@ -21,9 +21,9 @@ imports HCS
 
   Note that according to the spec, the funds go to SupplyManager even if the caller is Owner
  */
-rule <k> mint(Value, {caller: Caller})
+claim <k> mint(Value, {caller: Caller})
          ~>
-         burn(Value, {caller: Caller}) => . ...</k>
+         burn(Value, {caller: Caller}) => .K ...</k>
      <balances> ... (SupplyManager |-> Balance) ... </balances>
      <tokenOwner> Owner </tokenOwner>
      <supplyManager> SupplyManager </supplyManager>
@@ -34,6 +34,7 @@ rule <k> mint(Value, {caller: Caller})
     andBool Supply >=Int Balance
     andBool Balance >=Int 0
     andBool Supply +Int Value <=Int MAXVALUE
+  [label(mint-burn)]
 
 /*
   Burn followed by a mint will result in no changes to the totalSupply (disallowing underflow)
@@ -53,9 +54,9 @@ rule <k> mint(Value, {caller: Caller})
 
   Note that according to the spec, the funds go to SupplyManager even if the caller is Owner
  */
-rule <k> burn(Value, {caller: Caller})
+claim <k> burn(Value, {caller: Caller})
          ~>
-         mint(Value, {caller: Caller}) => . ...</k>
+         mint(Value, {caller: Caller}) => .K ...</k>
      <balances> ... (SupplyManager |-> Balance) ... </balances>
      <tokenOwner> Owner </tokenOwner>
      <supplyManager> SupplyManager </supplyManager>
@@ -66,6 +67,7 @@ rule <k> burn(Value, {caller: Caller})
     andBool Balance >=Int Value
     andBool Supply >=Int Balance
     andBool Supply <=Int MAXVALUE
+  [label(burn-mint)]
 
 /*
   Wipe tokens of a stale supply manager after freezing their assets (note that freezing is not required).
@@ -85,11 +87,11 @@ rule <k> burn(Value, {caller: Caller})
       * TotalSupply’ = TotalSupply - Balances[OldSupplyManager]
       * Balances[OldSupplyManager]’ = 0
  */
-rule <k> changeSupplyManager(SupplyManager, { caller : Caller } )
+claim <k> changeSupplyManager(SupplyManager, { caller : Caller } )
          ~>
          freeze(OldSupplyManager, {caller: Caller})
          ~>
-         wipe(OldSupplyManager, Value, {caller: Caller}) => . ...</k>
+         wipe(OldSupplyManager, Value, {caller: Caller}) => .K ...</k>
      <tokenOwner> Caller </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <enforcementManager> EnforcementManager </enforcementManager>
@@ -106,6 +108,7 @@ rule <k> changeSupplyManager(SupplyManager, { caller : Caller } )
     andBool OldSupplyManager =/=Int SupplyManager
     andBool OldSupplyManager =/=Int ComplianceManager
     andBool OldSupplyManager =/=Int EnforcementManager
+  [label(replace-freeze-wipe)]
 
 
 /*
@@ -122,9 +125,9 @@ rule <k> changeSupplyManager(SupplyManager, { caller : Caller } )
   Post-conditions
       * Allowances[caller][spender] = value1 + value2
  */
-rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         increaseAllowance(Spender, Value2:Int, { caller : Caller } ) => . ...</k>
+         increaseAllowance(Spender, Value2:Int, { caller : Caller } ) => .K ...</k>
        <allowances>
          ...
          <allowance>
@@ -140,6 +143,7 @@ rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
       andBool Value1 >=Int 0
       andBool Value2 >=Int 0
       andBool (Value1 +Int Value2) <=Int MAXVALUE
+  [label(approve-increase)]
 
 /*
   Approval of an allowance and then subsequent decrease should result in an approval of the difference of the allowances.
@@ -155,9 +159,9 @@ rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
   Post-conditions
       * Allowances[caller][spender] = value1 - value2
  */
-rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         decreaseAllowance(Spender, Value2:Int, { caller : Caller } ) => . ...</k>
+         decreaseAllowance(Spender, Value2:Int, { caller : Caller } ) => .K ...</k>
        <allowances>
          ...
          <allowance>
@@ -173,6 +177,7 @@ rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
       andBool Value1 >=Int 0
       andBool Value2 >=Int 0
       andBool (Value1 -Int Value2) >=Int 0
+  [label(approve-decrease)]
 
 
 /*
@@ -192,7 +197,7 @@ rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
       * Balances[From]’ = Balances[From]
       * Balances[To]' = Balances[To]
  */
-rule <k> freeze(From:Int, { caller : Caller } )
+claim <k> freeze(From:Int, { caller : Caller } )
          ~>
          transfer(To:Int, Value:Int, { caller : From } ) => throw ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
@@ -211,6 +216,7 @@ rule <k> freeze(From:Int, { caller : Caller } )
       andBool To =/=Int From
       andBool Value >=Int 0
       andBool Balance >=Int Value
+  [label(freeze-transfer)]
 
 /*
   Allow transfers when an account is unfrozen.
@@ -229,9 +235,9 @@ rule <k> freeze(From:Int, { caller : Caller } )
       * Balances[From]’ = Balances[From] - value
       * Balances[To]' = Balances[To] + value
  */
-rule <k> unfreeze(From:Int, {caller: Caller})
+claim <k> unfreeze(From:Int, {caller: Caller})
          ~>
-         transfer(To:Int, Value:Int, { caller : From } ) => . ...</k>
+         transfer(To:Int, Value:Int, { caller : From } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <kycpassed> ... (To |-> true) (From |-> true) ... </kycpassed>
@@ -243,5 +249,6 @@ rule <k> unfreeze(From:Int, {caller: Caller})
     andBool To =/=Int From
     andBool Value >=Int 0
     andBool BalanceFrom >=Int Value
+  [label(unfreeze-transfer)]
 
 endmodule

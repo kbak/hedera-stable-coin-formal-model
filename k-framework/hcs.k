@@ -51,7 +51,7 @@ module HCS
   // This module defines semantics of the token.
 
   // Configuration specifies a list of fields over which functions operate.
-  configuration <HCS unused="true">
+  configuration <HCS>
                   <k> $PGM:K </k>
                   // balances maps each address to the number of tokens it possess.
                   <balances>
@@ -128,7 +128,7 @@ module HCS
         * KycPassed = { Owner->true, SupplyManager->true, ComplianceManager->true, EnforcementManager->true }
         * ProposedOwner = 0x
    */
-  rule <k> constructor(TokenNameArg, TokenSymbolArg, TokenDecimalArg, TotalSupplyArg, SupplyManagerArg, ComplianceManagerArg, EnforcementManagerArg, { caller : Caller } ) => . ...</k>
+  rule <k> constructor(TokenNameArg, TokenSymbolArg, TokenDecimalArg, TotalSupplyArg, SupplyManagerArg, ComplianceManagerArg, EnforcementManagerArg, { caller : Caller } ) => .K ...</k>
       <balances> Balances:Map => Balances [SupplyManagerArg <- TotalSupplyArg][Caller <- 0][ComplianceManagerArg <- 0][EnforcementManagerArg <- 0] </balances>
       <kycpassed> KycPassed:Map => KycPassed[Caller <- true][SupplyManagerArg <- true][ComplianceManagerArg <- true][EnforcementManagerArg <- true] </kycpassed>
       <frozen> Frozen:Map => Frozen[Caller <- false][SupplyManagerArg <- false][ComplianceManagerArg <- false][EnforcementManagerArg <- false] </frozen>
@@ -433,7 +433,7 @@ module HCS
 
     Note that according to the spec, the funds go to SupplyManager even if the caller is Owner.
    */
-  rule <k> mint(Value, { caller : Caller } ) => . ...</k>
+  rule <k> mint(Value, { caller : Caller } ) => .K ...</k>
        <balances> ... (SupplyManager |-> Balance => SupplyManager |-> Balance +Int Value) ... </balances>
        <tokenOwner> Owner </tokenOwner>
        <supplyManager> SupplyManager </supplyManager>
@@ -472,7 +472,7 @@ module HCS
         * TotalSupply’ = TotalSupply - value // the new supply is decreased by value
         * Balances[SupplyManager]’ = Balances[SupplyManager] - value
    */
-  rule <k> burn(Value, { caller: Caller } ) => . ...</k>
+  rule <k> burn(Value, { caller: Caller } ) => .K ...</k>
        <balances> ... (SupplyManager |-> Balance => SupplyManager |-> Balance -Int Value) ... </balances>
        <tokenOwner> Owner </tokenOwner>
        <supplyManager> SupplyManager </supplyManager>
@@ -535,7 +535,7 @@ module HCS
     Post-conditions
         * Allowances[caller][spender] = value
    */
-  rule <k> approveAllowance(Spender, Value, { caller : Caller } ) => . ...</k>
+  rule <k> approveAllowance(Spender, Value, { caller : Caller } ) => .K ...</k>
        <allowances>
          ...
          <allowance>
@@ -588,7 +588,7 @@ module HCS
    */
 
   // transfer case: To =/= From, success
-  rule <k> transfer(To, Value, { caller : From } ) => . ...</k>
+  rule <k> transfer(To, Value, { caller : From } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <balances> ... (From |-> BalanceFrom => From |-> BalanceFrom -Int Value)
                       (To |-> BalanceTo => To |-> BalanceTo +Int Value) ... </balances>
@@ -600,7 +600,7 @@ module HCS
       andBool BalanceFrom >=Int Value
 
   // transfer case: To == From, success
-  rule <k> transfer(Account, Value, { caller : Account } ) => . ...</k>
+  rule <k> transfer(Account, Value, { caller : Account } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <balances> ... (Account |-> Balance) ... </balances>
        <kycpassed> ... (Account |-> true) ... </kycpassed>
@@ -642,7 +642,7 @@ module HCS
    */
 
   // transferFrom case: To =/= From, success
-  rule <k> transferFrom(From, To, Value, {caller: Caller}) => . ... </k>
+  rule <k> transferFrom(From, To, Value, {caller: Caller}) => .K ... </k>
        <tokenOwner> TokenOwner </tokenOwner>
        <allowance>
          <allower> From </allower>
@@ -659,7 +659,7 @@ module HCS
       andBool Allowance >=Int Value
 
   // transferFrom case: To == From, success
-  rule <k> transferFrom(From, From, Value, {caller: Caller}) => . ... </k>
+  rule <k> transferFrom(From, From, Value, {caller: Caller}) => .K ... </k>
        <tokenOwner> TokenOwner </tokenOwner>
        <allowance>
          <allower> From </allower>
@@ -674,8 +674,8 @@ module HCS
       andBool Balance >=Int Value
       andBool Allowance >=Int Value
 
-  // throws if pre-conditions are not satisfied
-  rule <k> transferFrom(From, From, Value, {caller: Caller}) => throw ... </k>
+  // transferFrom case: To =/= From, failure
+  rule <k> transferFrom(From, To, Value, {caller: Caller}) => throw ... </k>
        <tokenOwner> TokenOwner </tokenOwner>
        <allowance>
          <allower> From </allower>
@@ -684,7 +684,8 @@ module HCS
        <balances> ... (From |-> Balance) ... </balances>
        <kycpassed> ... (To |-> ToKyc) (From |-> FromKyc) (Caller |-> CallerKyc) ... </kycpassed>
        <frozen> ... (To |-> ToFrozen) (From |-> FromFrozen) (Caller |-> CallerFrozen) ... </frozen>
-    requires TokenOwner ==Int 0
+    requires To =/=Int From
+      andBool (TokenOwner ==Int 0
       orBool Value <Int 0
       orBool Balance <Int Value
       orBool Allowance <Int Value
@@ -692,6 +693,25 @@ module HCS
       orBool (notBool FromKyc)
       orBool (notBool CallerKyc)
       orBool ToFrozen
+      orBool FromFrozen
+      orBool CallerFrozen)
+
+  // Self-transfers check only From and Caller, never an unrelated account.
+  rule <k> transferFrom(From, From, Value, {caller: Caller}) => throw ... </k>
+       <tokenOwner> TokenOwner </tokenOwner>
+       <allowance>
+         <allower> From </allower>
+         <spenders> ... (Caller |-> Allowance) ... </spenders>
+       </allowance>
+       <balances> ... (From |-> Balance) ... </balances>
+       <kycpassed> ... (From |-> FromKyc) (Caller |-> CallerKyc) ... </kycpassed>
+       <frozen> ... (From |-> FromFrozen) (Caller |-> CallerFrozen) ... </frozen>
+    requires TokenOwner ==Int 0
+      orBool Value <Int 0
+      orBool Balance <Int Value
+      orBool Allowance <Int Value
+      orBool (notBool FromKyc)
+      orBool (notBool CallerKyc)
       orBool FromFrozen
       orBool CallerFrozen
 
@@ -709,7 +729,7 @@ module HCS
     Post-conditions
         * ProposedOwner = addr
    */
-  rule <k> proposeOwner(ProposedOwner, { caller : Caller } ) => . ...</k>
+  rule <k> proposeOwner(ProposedOwner, { caller : Caller } ) => .K ...</k>
        <tokenOwner> Caller </tokenOwner>
        <proposedOwner> _ => ProposedOwner </proposedOwner>
        <kycpassed> ... (ProposedOwner |-> true) ... </kycpassed>
@@ -739,7 +759,7 @@ module HCS
         * Owner = caller
         * ProposedOwner = 0x
    */
-  rule <k> claimOwnership( { caller : Caller } ) => . ...</k>
+  rule <k> claimOwnership( { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner => Caller </tokenOwner>
        <proposedOwner> Caller => 0 </proposedOwner>
        <kycpassed> ... (Caller |-> true) ... </kycpassed>
@@ -770,7 +790,7 @@ module HCS
     Post-conditions
         * SupplyManager = addr
    */
-  rule <k> changeSupplyManager(SupplyManager, { caller : Caller } ) => . ...</k>
+  rule <k> changeSupplyManager(SupplyManager, { caller : Caller } ) => .K ...</k>
        <tokenOwner> Caller </tokenOwner>
        <supplyManager> _ => SupplyManager </supplyManager>
        <kycpassed> ... (SupplyManager |-> true) ... </kycpassed>
@@ -800,7 +820,7 @@ module HCS
     Post-conditions
         * ComplianceManager = addr
    */
-  rule <k> changeComplianceManager(ComplianceManager, { caller : Caller } ) => . ...</k>
+  rule <k> changeComplianceManager(ComplianceManager, { caller : Caller } ) => .K ...</k>
        <tokenOwner> Caller </tokenOwner>
        <complianceManager> _ => ComplianceManager </complianceManager>
        <kycpassed> ... (ComplianceManager |-> true) ... </kycpassed>
@@ -830,7 +850,7 @@ module HCS
     Post-conditions
         * EnforcementManager = addr
    */
-  rule <k> changeEnforcementManager(EnforcementManager, { caller : Caller } ) => . ...</k>
+  rule <k> changeEnforcementManager(EnforcementManager, { caller : Caller } ) => .K ...</k>
        <tokenOwner> Caller </tokenOwner>
        <enforcementManager> _ => EnforcementManager </enforcementManager>
        <kycpassed> ... (EnforcementManager |-> true) ... </kycpassed>
@@ -860,7 +880,7 @@ module HCS
     Post-conditions
         * KycPassed[addr]
    */
-  rule <k> setKycPassed(Account, { caller : Caller } ) => . ...</k>
+  rule <k> setKycPassed(Account, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <complianceManager> ComplianceManager </complianceManager>
        <kycpassed> ... (Account |-> _ => Account |-> true) ... </kycpassed>
@@ -885,7 +905,7 @@ module HCS
     Post-conditions
         * !KycPassed[addr]
    */
-  rule <k> unsetKycPassed(Account, { caller : Caller } ) => . ...</k>
+  rule <k> unsetKycPassed(Account, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <complianceManager> ComplianceManager </complianceManager>
        <supplyManager> SupplyManager </supplyManager>
@@ -922,7 +942,7 @@ module HCS
     Post-conditions
         * Frozen[addr] // upon completion, Frozen[addr] must be true
    */
-  rule <k> freeze(Account, { caller : Caller } ) => . ...</k>
+  rule <k> freeze(Account, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <complianceManager> ComplianceManager </complianceManager>
        <supplyManager> SupplyManager </supplyManager>
@@ -958,7 +978,7 @@ module HCS
     Post-conditions
         * !Frozen[addr] // upon completion, Frozen[addr] must be false
    */
-  rule <k> unfreeze(Account, { caller : Caller } ) => . ...</k>
+  rule <k> unfreeze(Account, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <complianceManager> ComplianceManager </complianceManager>
        <frozen> ... (Account |-> _ => Account |-> false) ... </frozen>
@@ -985,7 +1005,7 @@ module HCS
         * TotalSupply’ = TotalSupply - value // total supply decreased
         * Balances[addr]’ = Balances[addr] - value // balance “updated”
    */
-  rule <k> wipe(Account, Value, { caller : Caller } ) => . ...</k>
+  rule <k> wipe(Account, Value, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <enforcementManager> EnforcementManager </enforcementManager>
        <balances> ... (Account |-> Bal => Account |-> Bal -Int Value) ... </balances>
@@ -1048,7 +1068,7 @@ module HCS
     Post-conditions
         * Allowances[caller][spender]’ = Allowances[caller][spender] + value
    */
-  rule <k> increaseAllowance(Spender, Value, { caller : Caller } ) => . ...</k>
+  rule <k> increaseAllowance(Spender, Value, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <allowances>
          ...
@@ -1100,7 +1120,7 @@ module HCS
     Post-conditions
         * Allowances[caller][spender]’ = Allowances[caller][spender] - value
    */
-  rule <k> decreaseAllowance(Spender, Value, { caller : Caller } ) => . ...</k>
+  rule <k> decreaseAllowance(Spender, Value, { caller : Caller } ) => .K ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
        <allowances>
          ...

@@ -13,7 +13,7 @@ imports HCS
   Post-conditions
       * KycPassed[addr]
  */
-rule <k>setKycPassed(Target:Int, {caller: Caller}) => . ...</k>
+claim <k>setKycPassed(Target:Int, {caller: Caller}) => .K ...</k>
      <tokenOwner> Owner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <kycpassed> ... (Target |-> _ => Target |-> true) ... </kycpassed>
@@ -22,7 +22,7 @@ rule <k>setKycPassed(Target:Int, {caller: Caller}) => . ...</k>
     andBool (Caller ==Int ComplianceManager orBool Caller ==Int Owner)
 
 // throws if pre-conditions are not satisfied
-rule <k> setKycPassed(_:Int, {caller: Caller}) => throw ...</k>
+claim <k> setKycPassed(_:Int, {caller: Caller}) => throw ...</k>
      <tokenOwner> Owner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
   requires Owner =/=Int 0
@@ -40,7 +40,7 @@ rule <k> setKycPassed(_:Int, {caller: Caller}) => throw ...</k>
   Post-conditions
       * !KycPassed[addr]
  */
-rule <k> unsetKycPassed(Account:Int, {caller: Caller}) => . ...</k>
+claim <k> unsetKycPassed(Account:Int, {caller: Caller}) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <supplyManager> SupplyManager </supplyManager>
@@ -54,7 +54,7 @@ rule <k> unsetKycPassed(Account:Int, {caller: Caller}) => . ...</k>
     andBool Account =/=Int EnforcementManager
 
 // throws if pre-conditions are not satisfied
-rule <k> unsetKycPassed(Account:Int, {caller: Caller}) => throw ...</k>
+claim <k> unsetKycPassed(Account:Int, {caller: Caller}) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <enforcementManager> EnforcementManager </enforcementManager>
@@ -77,7 +77,7 @@ rule <k> unsetKycPassed(Account:Int, {caller: Caller}) => throw ...</k>
   Post-conditions
       * Frozen[addr] // upon completion, Frozen[addr] must be true
  */
-rule <k> freeze(Account:Int, {caller: Caller}) => . ...</k>
+claim <k> freeze(Account:Int, {caller: Caller}) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <supplyManager> SupplyManager </supplyManager>
@@ -91,7 +91,7 @@ rule <k> freeze(Account:Int, {caller: Caller}) => . ...</k>
     andBool Account =/=Int EnforcementManager
 
 // throws if pre-conditions are not satisfied
-rule <k> freeze(Account:Int, { caller : Caller } ) => throw ...</k>
+claim <k> freeze(Account:Int, { caller : Caller } ) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <enforcementManager> EnforcementManager </enforcementManager>
@@ -113,7 +113,7 @@ rule <k> freeze(Account:Int, { caller : Caller } ) => throw ...</k>
   Post-conditions
       * !Frozen[addr] // upon completion, Frozen[addr] must be false
  */
-rule <k> unfreeze(Account:Int, {caller: Caller}) => . ...</k>
+claim <k> unfreeze(Account:Int, {caller: Caller}) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <frozen> ... (Account |-> true => Account |-> false) ... </frozen>
@@ -121,7 +121,7 @@ rule <k> unfreeze(Account:Int, {caller: Caller}) => . ...</k>
     andBool (Caller ==Int TokenOwner orBool Caller ==Int ComplianceManager)
 
 // throws if pre-conditions are not satisfied
-rule <k> unfreeze(_:Int, {caller: Caller}) => throw ...</k>
+claim <k> unfreeze(_:Int, {caller: Caller}) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
   requires TokenOwner ==Int 0
@@ -138,11 +138,11 @@ rule <k> unfreeze(_:Int, {caller: Caller}) => throw ...</k>
   Post-conditions
       * Frozen[addr] // upon completion, Frozen[addr] must be true
  */
-rule <k> freeze(Account:Int, {caller: Caller})
+claim <k> freeze(Account:Int, {caller: Caller})
          ~>
          unfreeze(Account:Int, {caller: Caller})
          ~>
-         freeze(Account:Int, {caller: Caller}) => . ...</k>
+         freeze(Account:Int, {caller: Caller}) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <supplyManager> SupplyManager </supplyManager>
@@ -169,7 +169,7 @@ rule <k> freeze(Account:Int, {caller: Caller})
       * Balances[addr]’ = Balances[addr] - value // balance “updated”
  */
 
-rule <k>  wipe(Account:Int, Value:Int, {caller: Caller}) => . ...</k>
+claim <k>  wipe(Account:Int, Value:Int, {caller: Caller}) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <enforcementManager> EnforcementManager </enforcementManager>
      <balances> ... (Account |-> Bal => Account |-> Bal -Int Value) ... </balances>
@@ -180,7 +180,7 @@ rule <k>  wipe(Account:Int, Value:Int, {caller: Caller}) => . ...</k>
     andBool (Caller ==Int TokenOwner orBool Caller ==Int EnforcementManager)
 
 // throws if pre-conditions are not satisfied
-rule <k> wipe(Account:Int, Value:Int, {caller: Caller}) => throw ...</k>
+claim <k> wipe(Account:Int, Value:Int, {caller: Caller}) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <enforcementManager> EnforcementManager </enforcementManager>
      <balances> ... (Account |-> Bal) ... </balances>
@@ -199,7 +199,7 @@ rule <k> wipe(Account:Int, Value:Int, {caller: Caller}) => throw ...</k>
   Post-conditions
       * result = true
  */
-rule <k> isPrivilegedRole(Account:Int) => true ...</k>
+claim <k> isPrivilegedRole(Account:Int) => true ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <supplyManager> SupplyManager </supplyManager>
      <complianceManager> ComplianceManager </complianceManager>
@@ -218,7 +218,7 @@ rule <k> isPrivilegedRole(Account:Int) => true ...</k>
   Post-conditions
       * result = false
  */
-rule <k> isPrivilegedRole(Account:Int) => false ...</k>
+claim <k> isPrivilegedRole(Account:Int) => false ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <complianceManager> ComplianceManager </complianceManager>
      <supplyManager> SupplyManager </supplyManager>
@@ -239,7 +239,7 @@ rule <k> isPrivilegedRole(Account:Int) => false ...</k>
   Post-conditions
       * Allowances[caller][spender]’ = Allowances[caller][spender] + value
  */
-rule <k> increaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => . ...</k>
+claim <k> increaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -270,9 +270,9 @@ rule <k> increaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => . ..
   Post-conditions
       * Allowances[caller][spender]’ = Allowances[caller][spender] + value1 + value2
  */
-rule <k> increaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> increaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         increaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => . ...</k>
+         increaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -291,7 +291,7 @@ rule <k> increaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
     andBool OldAllowance >=Int 0
 
 // throws if pre-conditions are not satisfied
-rule <k> increaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => throw ...</k>
+claim <k> increaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -325,7 +325,7 @@ rule <k> increaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => thro
   Post-conditions
       * Allowances[caller][spender]’ = Allowances[caller][spender] - value
  */
-rule <k> decreaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => . ...</k>
+claim <k> decreaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -356,9 +356,9 @@ rule <k> decreaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => . ..
   Post-conditions
       * Allowances[caller][spender]’ = Allowances[caller][spender] - value1 - value2
  */
-rule <k> decreaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> decreaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         decreaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => . ...</k>
+         decreaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -377,7 +377,7 @@ rule <k> decreaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
     andBool OldAllowance >=Int 0
 
 // decrease allowance: exception
-rule <k> decreaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => throw ...</k>
+claim <k> decreaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -413,9 +413,9 @@ rule <k> decreaseAllowance(Spender:Int, Value:Int, { caller : Caller } ) => thro
   Post-conditions
       * Allowances[caller][spender]’ = Allowances[caller][spender] + value1 - value2
  */
-rule <k> increaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> increaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         decreaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => . ...</k>
+         decreaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -449,9 +449,9 @@ rule <k> increaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
   Post-conditions
       * Allowances[caller][spender]’ = Allowances[caller][spender] - value1 + value2
  */
-rule <k> decreaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> decreaseAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         increaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => . ...</k>
+         increaseAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...

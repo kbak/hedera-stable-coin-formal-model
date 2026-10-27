@@ -15,7 +15,7 @@ imports HCS
   Post-conditions
       * Allowances[caller][spender] = value  
  */
-rule <k> approveAllowance(Spender:Int, Value:Int, { caller : Caller } ) => . ...</k>
+claim <k> approveAllowance(Spender:Int, Value:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -43,9 +43,9 @@ rule <k> approveAllowance(Spender:Int, Value:Int, { caller : Caller } ) => . ...
   Post-conditions
       * Allowances[caller][spender] = value2
  */
-rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
+claim <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
          ~>
-         approveAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => . ...</k>
+         approveAllowance(Spender:Int, Value2:Int, { caller : Caller } ) => .K ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
      <allowances>
       ...
@@ -70,7 +70,7 @@ rule <k> approveAllowance(Spender:Int, Value1:Int, { caller : Caller } )
   Post-conditions
       * throws
  */
-rule <k> approveAllowance(Spender:Int, Value:Int, { caller : Caller } ) => throw ...</k>
+claim <k> approveAllowance(Spender:Int, Value:Int, { caller : Caller } ) => throw ...</k>
      <allowances>
          ...
          <allowance>

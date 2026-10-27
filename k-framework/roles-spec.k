@@ -15,7 +15,7 @@ module ROLES-SPEC
   Post-conditions
       * ProposedOwner = addr
 */
-rule <k> proposeOwner(ProposedOwner, { caller : Caller } ) => . ...</k>
+claim <k> proposeOwner(ProposedOwner, { caller : Caller } ) => .K ...</k>
      <tokenOwner> Caller </tokenOwner>
      <proposedOwner> _ => ProposedOwner </proposedOwner>
      <kycpassed> ... (ProposedOwner |-> true) ... </kycpassed>
@@ -36,9 +36,9 @@ rule <k> proposeOwner(ProposedOwner, { caller : Caller } ) => . ...</k>
   Post-conditions
       * ProposedOwner = ProposedOwner2
 */
-rule <k> proposeOwner(ProposedOwner1, { caller : Caller } )
+claim <k> proposeOwner(ProposedOwner1, { caller : Caller } )
          ~>
-         proposeOwner(ProposedOwner2, { caller : Caller } ) => . ...</k>
+         proposeOwner(ProposedOwner2, { caller : Caller } ) => .K ...</k>
      <tokenOwner> Caller </tokenOwner>
      <proposedOwner> _ => ProposedOwner2 </proposedOwner>
      <kycpassed> ... (ProposedOwner1 |-> true)(ProposedOwner2 |-> true) ... </kycpassed>
@@ -46,10 +46,10 @@ rule <k> proposeOwner(ProposedOwner1, { caller : Caller } )
   requires Caller =/=Int 0 andBool ProposedOwner1 =/=Int 0 andBool ProposedOwner2 =/=Int 0
 
 // non-owner cannot propose a new owner
-rule <k> proposeOwner(ProposedOwner:Int, { caller : Caller } ) => throw ...</k>
+claim <k> proposeOwner(ProposedOwner:Int, { caller : Caller } ) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
-     <kycpassed> ... (ProposedOwner |-> _) ... </kycpassed>
-     <frozen> ... (ProposedOwner |-> _) ... </frozen>
+     <kycpassed> ... (ProposedOwner |-> _:Bool) ... </kycpassed>
+     <frozen> ... (ProposedOwner |-> _:Bool) ... </frozen>
   requires TokenOwner =/=Int Caller
 
 /*
@@ -65,9 +65,9 @@ rule <k> proposeOwner(ProposedOwner:Int, { caller : Caller } ) => throw ...</k>
       * ProposedOwner = 0
       * Owner = addr
 */
-rule <k> proposeOwner(ProposedOwner, { caller : Caller } )
+claim <k> proposeOwner(ProposedOwner, { caller : Caller } )
          ~>
-         claimOwnership( { caller : ProposedOwner } ) => . ...</k>
+         claimOwnership( { caller : ProposedOwner } ) => .K ...</k>
      <tokenOwner> Caller => ProposedOwner </tokenOwner>
      <proposedOwner> _ => 0 </proposedOwner>
      <kycpassed> ... (ProposedOwner |-> true) ... </kycpassed>
@@ -75,13 +75,13 @@ rule <k> proposeOwner(ProposedOwner, { caller : Caller } )
   requires Caller =/=Int 0 andBool ProposedOwner =/=Int 0
 
 // nobody besides the proposed owner can claim ownership
-rule <k> proposeOwner(ProposedOwner:Int, { caller : Caller:Int } )
+claim <k> proposeOwner(ProposedOwner:Int, { caller : Caller:Int } )
          ~>
          claimOwnership( { caller : AnotherCaller:Int } ) => throw ...</k>
      <tokenOwner> Caller </tokenOwner>
      <proposedOwner> _ => ProposedOwner </proposedOwner>
-     <kycpassed> ... (ProposedOwner |-> true)(AnotherCaller |-> _) ... </kycpassed>
-     <frozen> ... (ProposedOwner |-> false)(AnotherCaller |-> _) ... </frozen>
+     <kycpassed> ... (ProposedOwner |-> true)(AnotherCaller |-> _:Bool) ... </kycpassed>
+     <frozen> ... (ProposedOwner |-> false)(AnotherCaller |-> _:Bool) ... </frozen>
   requires Caller =/=Int 0
     andBool AnotherCaller =/=Int 0
     andBool ProposedOwner =/=Int 0
@@ -99,7 +99,7 @@ rule <k> proposeOwner(ProposedOwner:Int, { caller : Caller:Int } )
   Post-conditions
       * SupplyManager = addr
 */
-rule <k> changeSupplyManager(SupplyManager, { caller : Caller } ) => . ...</k>
+claim <k> changeSupplyManager(SupplyManager, { caller : Caller } ) => .K ...</k>
      <tokenOwner> Caller </tokenOwner>
      <supplyManager> _ => SupplyManager </supplyManager>
      <kycpassed> ... (SupplyManager |-> true) ... </kycpassed>
@@ -107,10 +107,10 @@ rule <k> changeSupplyManager(SupplyManager, { caller : Caller } ) => . ...</k>
   requires Caller =/=Int 0 andBool SupplyManager =/=Int 0
 
 // non-owner cannot change supply manager
-rule <k> changeSupplyManager(SupplyManager:Int, { caller : Caller } ) => throw ...</k>
+claim <k> changeSupplyManager(SupplyManager:Int, { caller : Caller } ) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
-     <kycpassed> ... (SupplyManager |-> _) ... </kycpassed>
-     <frozen> ... (SupplyManager |-> _) ... </frozen>
+     <kycpassed> ... (SupplyManager |-> _:Bool) ... </kycpassed>
+     <frozen> ... (SupplyManager |-> _:Bool) ... </frozen>
   requires TokenOwner =/=Int Caller
 
 /*
@@ -125,7 +125,7 @@ rule <k> changeSupplyManager(SupplyManager:Int, { caller : Caller } ) => throw .
   Post-conditions
       * ComplianceManager = addr
  */
-rule <k> changeComplianceManager(ComplianceManager, { caller : Caller } ) =>  . ...</k>
+claim <k> changeComplianceManager(ComplianceManager, { caller : Caller } ) =>  .K ...</k>
      <tokenOwner> Caller </tokenOwner>
      <complianceManager> _ => ComplianceManager </complianceManager>
      <kycpassed> ... (ComplianceManager |-> true) ... </kycpassed>
@@ -133,10 +133,10 @@ rule <k> changeComplianceManager(ComplianceManager, { caller : Caller } ) =>  . 
   requires Caller =/=Int 0 andBool ComplianceManager =/=Int 0
 
 // non-owner cannot change compliance manager
-rule <k> changeComplianceManager(ComplianceManager:Int, { caller : Caller } ) => throw ...</k>
+claim <k> changeComplianceManager(ComplianceManager:Int, { caller : Caller } ) => throw ...</k>
      <tokenOwner> TokenOwner </tokenOwner>
-     <kycpassed> ... (ComplianceManager |-> _) ... </kycpassed>
-     <frozen> ... (ComplianceManager |-> _) ... </frozen>
+     <kycpassed> ... (ComplianceManager |-> _:Bool) ... </kycpassed>
+     <frozen> ... (ComplianceManager |-> _:Bool) ... </frozen>
   requires TokenOwner =/=Int Caller
 
   /*
@@ -151,7 +151,7 @@ rule <k> changeComplianceManager(ComplianceManager:Int, { caller : Caller } ) =>
     Post-conditions
         * EnforcementManager = addr
    */
-  rule <k> changeEnforcementManager(EnforcementManager, { caller : Caller } ) =>  . ...</k>
+  claim <k> changeEnforcementManager(EnforcementManager, { caller : Caller } ) =>  .K ...</k>
        <tokenOwner> Caller </tokenOwner>
        <enforcementManager> _ => EnforcementManager </enforcementManager>
        <kycpassed> ... (EnforcementManager |-> true) ... </kycpassed>
@@ -159,10 +159,10 @@ rule <k> changeComplianceManager(ComplianceManager:Int, { caller : Caller } ) =>
     requires Caller =/=Int 0 andBool EnforcementManager =/=Int 0
 
   // non-owner cannot change enforcement manager
-  rule <k> changeEnforcementManager(EnforcementManager:Int, { caller : Caller } ) => throw ...</k>
+  claim <k> changeEnforcementManager(EnforcementManager:Int, { caller : Caller } ) => throw ...</k>
        <tokenOwner> TokenOwner </tokenOwner>
-       <kycpassed> ... (EnforcementManager |-> _) ... </kycpassed>
-       <frozen> ... (EnforcementManager |-> _) ... </frozen>
+       <kycpassed> ... (EnforcementManager |-> _:Bool) ... </kycpassed>
+       <frozen> ... (EnforcementManager |-> _:Bool) ... </frozen>
     requires TokenOwner =/=Int Caller
 
 endmodule
